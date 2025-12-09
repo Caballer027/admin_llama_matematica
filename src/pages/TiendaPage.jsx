@@ -9,18 +9,15 @@ import toast from 'react-hot-toast';
 const TiendaPage = () => {
   const [items, setItems] = useState([]);
   const [tipos, setTipos] = useState([]);
-  const [personajes, setPersonajes] = useState([]); // 🔥 NUEVO
+  const [personajes, setPersonajes] = useState([]); 
   const [loading, setLoading] = useState(true);
 
-  // Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [currentItem, setCurrentItem] = useState(null);
 
-  // Tabs
   const [activeTab, setActiveTab] = useState('info');
 
-  // Formulario
   const [formData, setFormData] = useState({
     nombre_item: '',
     descripcion: '',
@@ -28,33 +25,36 @@ const TiendaPage = () => {
     tipo_item_id: ''
   });
 
-  // Icono tienda
   const [imgIcono, setImgIcono] = useState(null);
-
-  // 🔥 IMÁGENES DINÁMICAS PARA VARIANTES
   const [dynamicImages, setDynamicImages] = useState({});
 
   const handleDynamicImageChange = (assetKey, file) => {
     setDynamicImages(prev => ({ ...prev, [assetKey]: file }));
   };
 
-  // Helper URL
+  // ============================================================
+  // ✅ Helper URL (actualizado para Cloudinary)
+  // ============================================================
   const getUrl = (path) => {
     if (!path) return null;
-    if (path.startsWith('http') || path.startsWith('blob')) return path;
+
+    // Si el backend ya retorna la URL completa (Cloudinary), usarla tal cual
+    if (path.startsWith('http')) return path;
+
+    // Fallback solo si por alguna razón llega una ruta local
     const clean = path.startsWith('/') ? path.substring(1) : path;
     return `http://localhost:3000/${clean}`;
   };
 
   // ============================================================
-  // 🔥 fetchData — ahora con personajes dinámicos
+  // fetchData
   // ============================================================
   const fetchData = async () => {
     try {
       const [itemsRes, tiposRes, personajesRes] = await Promise.all([
         api.get('/tienda/items'),
         api.get('/tienda/tipos'),
-        api.get('/personajes') // 🔥 personajes
+        api.get('/personajes')
       ]);
 
       setItems(itemsRes.data);
@@ -73,7 +73,7 @@ const TiendaPage = () => {
   }, []);
 
   // ============================================================
-  // 🔥 Guardar item (dinámico)
+  // Guardar item
   // ============================================================
   const handleSave = async (e) => {
     e.preventDefault();
@@ -89,7 +89,6 @@ const TiendaPage = () => {
 
       if (imgIcono) data.append('icono', imgIcono);
 
-      // 🔥 Enviar imágenes dinámicas
       Object.keys(dynamicImages).forEach(key => {
         if (dynamicImages[key]) {
           data.append(`img_${key}`, dynamicImages[key]);
@@ -125,9 +124,6 @@ const TiendaPage = () => {
     }
   };
 
-  // ============================================================
-  // Abrir modal
-  // ============================================================
   const openModal = (item = null) => {
     setCurrentItem(item);
     setActiveTab('info');
@@ -149,8 +145,7 @@ const TiendaPage = () => {
     }
 
     setImgIcono(null);
-    setDynamicImages({}); // 🔥 limpiar variantes
-
+    setDynamicImages({});
     setIsModalOpen(true);
   };
 
@@ -199,12 +194,14 @@ const TiendaPage = () => {
           <h1 className="text-2xl font-bold text-gray-800">Tienda de Items</h1>
           <p className="text-gray-500 text-sm">Gestiona productos y sus variantes visuales.</p>
         </div>
-        <button onClick={() => openModal()} className="bg-primary hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm">
+        <button 
+          onClick={() => openModal()} 
+          className="bg-primary hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm"
+        >
           <Plus className="w-4 h-4" /> Nuevo Item
         </button>
       </div>
 
-      {/* TABLA */}
       <DataTable
         columns={columns}
         data={itemsFormateados}
@@ -212,29 +209,31 @@ const TiendaPage = () => {
         onDelete={handleDelete}
       />
 
-      {/* MODAL */}
       <Modal isOpen={isModalOpen} onClose={closeModal} title={currentItem ? 'Editar Item' : 'Nuevo Producto'}>
         <form onSubmit={handleSave} className="space-y-4">
 
-          {/* TABS */}
           <div className="flex border-b border-gray-200 mb-4">
             <button
               type="button"
-              className={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === 'info' ? 'text-primary border-b-2 border-primary' : 'text-gray-500 hover:text-gray-700'}`}
+              className={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === 'info'
+                ? 'text-primary border-b-2 border-primary'
+                : 'text-gray-500 hover:text-gray-700'}`}
               onClick={() => setActiveTab('info')}
             >
               Información Básica
             </button>
+
             <button
               type="button"
-              className={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === 'assets' ? 'text-primary border-b-2 border-primary' : 'text-gray-500 hover:text-gray-700'}`}
+              className={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === 'assets'
+                ? 'text-primary border-b-2 border-primary'
+                : 'text-gray-500 hover:text-gray-700'}`}
               onClick={() => setActiveTab('assets')}
             >
               Assets Visuales
             </button>
           </div>
 
-          {/* TAB INFO */}
           {activeTab === 'info' && (
             <div>
               <div className="grid grid-cols-2 gap-4 mb-4">
@@ -244,7 +243,7 @@ const TiendaPage = () => {
                     required
                     className="w-full px-3 py-2 border rounded-lg"
                     value={formData.nombre_item}
-                    onChange={e => setFormData({...formData, nombre_item: e.target.value})}
+                    onChange={e => setFormData({ ...formData, nombre_item: e.target.value })}
                   />
                 </div>
 
@@ -257,7 +256,7 @@ const TiendaPage = () => {
                       required
                       className="w-full pl-8 pr-3 py-2 border rounded-lg"
                       value={formData.costo_gemas}
-                      onChange={e => setFormData({...formData, costo_gemas: e.target.value})}
+                      onChange={e => setFormData({ ...formData, costo_gemas: e.target.value })}
                     />
                   </div>
                 </div>
@@ -269,7 +268,7 @@ const TiendaPage = () => {
                   required
                   className="w-full px-3 py-2 border rounded-lg bg-white"
                   value={formData.tipo_item_id}
-                  onChange={e => setFormData({...formData, tipo_item_id: e.target.value})}
+                  onChange={e => setFormData({ ...formData, tipo_item_id: e.target.value })}
                 >
                   <option value="">-- Selecciona --</option>
                   {tipos.map(t => (
@@ -284,17 +283,15 @@ const TiendaPage = () => {
                   className="w-full px-3 py-2 border rounded-lg"
                   rows="3"
                   value={formData.descripcion}
-                  onChange={e => setFormData({...formData, descripcion: e.target.value})}
+                  onChange={e => setFormData({ ...formData, descripcion: e.target.value })}
                 />
               </div>
             </div>
           )}
 
-          {/* TAB ASSETS */}
           {activeTab === 'assets' && (
             <div className="max-h-[60vh] overflow-y-auto pr-2">
 
-              {/* Icono */}
               <div className="bg-gray-50 p-4 rounded-lg border mb-6">
                 <h4 className="text-sm font-bold flex items-center gap-2">
                   <ShoppingBag className="w-4 h-4" /> Icono de Tienda
@@ -306,7 +303,6 @@ const TiendaPage = () => {
                 />
               </div>
 
-              {/* Variantes */}
               <div className="space-y-6">
                 <h4 className="text-sm font-bold flex items-center gap-2 pb-2 border-b">
                   <Shirt className="w-4 h-4" /> Variantes Equipadas
@@ -327,7 +323,6 @@ const TiendaPage = () => {
             </div>
           )}
 
-          {/* BOTONES */}
           <div className="flex justify-end gap-3 pt-4 border-t mt-4">
             <button type="button" onClick={closeModal} className="px-4 py-2 bg-gray-100 rounded-lg">
               Cancelar
