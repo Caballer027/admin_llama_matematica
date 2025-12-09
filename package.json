@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "netlify-build": "npm run build && cp _redirects dist/",
+    "netlify-build": "npm run build && echo '/* /index.html 200' > dist/_redirects",
     "lint": "eslint .",
     "preview": "vite preview"
   },
