@@ -1,39 +1,27 @@
+// src/components/ImageUpload.jsx (CÓDIGO NUEVO COMPLETO)
 import { useState, useEffect } from 'react';
 import { Upload, X, Image as ImageIcon } from 'lucide-react';
 
 const ImageUpload = ({ label, currentImageUrl, onFileSelect }) => {
   const [preview, setPreview] = useState(null);
 
-  // URL Base de tu Backend (Ajusta si usas otro puerto)
-  const API_URL = 'http://localhost:3000';
+  // 🛑 ELIMINAMOS la URL hardcodeada de localhost
+  // const API_URL = 'http://localhost:3000'; // <-- ELIMINAR
 
   useEffect(() => {
     if (currentImageUrl) {
-      let url = currentImageUrl;
-
-      // LÓGICA INTELIGENTE DE URL:
-      // 1. Si ya es completa (http...) o local (blob...), la dejamos igual.
-      // 2. Si es relativa (viene de la BD), le pegamos el dominio del backend.
-      if (typeof url === 'string' && !url.startsWith('http') && !url.startsWith('blob:')) {
-        
-        // Aseguramos que no haya doble barra // al unir
-        // Si la url de la BD empieza con /, la usamos tal cual: localhost:3000/historias/foto.jpg
-        // Si tu backend sirve los archivos bajo '/uploads', descomenta la línea de abajo:
-        // url = `/uploads${url.startsWith('/') ? '' : '/'}${url}`;
-        
-        url = `${API_URL}${url.startsWith('/') ? '' : '/'}${url}`;
-      }
-      
-      setPreview(url);
+      // currentImageUrl ya debe ser la URL COMPLETA de Cloudinary o una URL local (blob:)
+      setPreview(currentImageUrl);
     } else {
       setPreview(null);
     }
+    
+    // Resetear la previsualización si la imagen actual cambia
   }, [currentImageUrl]);
 
   const handleChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Creamos una URL temporal para ver la imagen que acabamos de elegir
       const objectUrl = URL.createObjectURL(file);
       setPreview(objectUrl);
       
@@ -44,7 +32,7 @@ const ImageUpload = ({ label, currentImageUrl, onFileSelect }) => {
 
   const handleRemove = () => {
     setPreview(null);
-    // Limpiamos el input file para permitir subir la misma imagen si el usuario se arrepiente
+    
     const fileInput = document.getElementById(`file-${label}`);
     if (fileInput) fileInput.value = '';
     
@@ -65,7 +53,7 @@ const ImageUpload = ({ label, currentImageUrl, onFileSelect }) => {
               className="max-h-48 w-full object-contain rounded-md shadow-sm mx-auto" 
               onError={(e) => { 
                 e.target.onerror = null; 
-                e.target.src = 'https://via.placeholder.com/150?text=No+Encontrado'; // Fallback visual
+                e.target.src = 'https://via.placeholder.com/150?text=Error+Carga'; // Fallback
               }} 
             />
             <button
@@ -86,7 +74,7 @@ const ImageUpload = ({ label, currentImageUrl, onFileSelect }) => {
               <ImageIcon className="h-8 w-8 text-gray-400 group-hover:text-primary" />
             </div>
             <p className="text-sm font-medium text-gray-700 group-hover:text-primary">Click para subir imagen</p>
-            <p className="text-xs text-gray-400 mt-1">PNG, JPG hasta 5MB</p>
+            <p className="text-xs text-gray-400 mt-1">PNG, JPG hasta 10MB</p>
           </div>
         )}
 
@@ -94,7 +82,7 @@ const ImageUpload = ({ label, currentImageUrl, onFileSelect }) => {
           id={`file-${label}`}
           type="file" 
           accept="image/*"
-          className="hidden" // Ocultamos el input feo original
+          className="hidden"
           onChange={handleChange}
         />
       </div>
