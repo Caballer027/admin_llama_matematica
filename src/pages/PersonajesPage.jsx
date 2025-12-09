@@ -23,22 +23,8 @@ const PersonajesPage = () => {
   });
   const [imagenFile, setImagenFile] = useState(null);
 
-  // 🔥 HELPER: Limpiador de URLs de imágenes
-  const getImageUrl = (path) => {
-    if (!path) return null;
-    if (path.startsWith('http')) return path; // Ya es absoluta
-    
-    // Quitamos la barra inicial si existe para evitar dobles //
-    const cleanPath = path.startsWith('/') ? path.substring(1) : path;
-    
-    // Si la ruta dice "assets/" pero la carpeta real es "personajes/", lo corregimos visualmente (parche temporal)
-    // Lo ideal es borrar y crear de nuevo el personaje, pero esto ayuda a ver los viejos.
-    if (cleanPath.startsWith('assets/')) {
-        return `http://localhost:3000/${cleanPath.replace('assets/', 'personajes/')}`;
-    }
-
-    return `http://localhost:3000/${cleanPath}`;
-  };
+  // ✅ NUEVO HELPER (Cloudinary ya devuelve URL completa)
+  const getImageUrl = (path) => path || null;
 
   // 1. Cargar Personajes
   const fetchPersonajes = async () => {
@@ -140,7 +126,10 @@ const PersonajesPage = () => {
           <h1 className="text-2xl font-bold text-gray-800">Gestión de Personajes</h1>
           <p className="text-gray-500 text-sm">Personaliza los avatares.</p>
         </div>
-        <button onClick={() => openModal(null)} className="bg-primary hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm">
+        <button
+          onClick={() => openModal(null)}
+          className="bg-primary hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm"
+        >
           <Plus className="w-4 h-4" /> Nuevo Personaje
         </button>
       </div>
@@ -159,13 +148,12 @@ const PersonajesPage = () => {
             {personajes.map((p) => (
               <tr key={p.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap">
-                  {/* 🔥 USAMOS EL HELPER getImageUrl AQUÍ */}
                   {p.url_imagen_base ? (
                     <img 
-                      src={getImageUrl(p.url_imagen_base)} 
+                      src={p.url_imagen_base}
                       alt={p.nombre} 
                       className="h-12 w-12 rounded-full object-cover border-2 border-gray-100 bg-gray-50"
-                      onError={(e) => e.target.src = 'https://via.placeholder.com/50?text=?'} // Fallback
+                      onError={(e) => (e.target.src = 'https://via.placeholder.com/50?text=?')}
                     />
                   ) : (
                     <div className="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center">
@@ -173,20 +161,35 @@ const PersonajesPage = () => {
                     </div>
                   )}
                 </td>
+
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm font-bold text-gray-900">{p.nombre}</div>
-                  <div className="text-xs text-gray-400 font-mono bg-gray-100 px-1.5 py-0.5 rounded w-fit mt-1">{p.asset_key}</div>
+                  <div className="text-xs text-gray-400 font-mono bg-gray-100 px-1.5 py-0.5 rounded w-fit mt-1">
+                    {p.asset_key}
+                  </div>
                 </td>
+
                 <td className="px-6 py-4">
-                  <div className="text-sm text-gray-600 mb-1"><span className="font-semibold text-xs text-gray-400 uppercase">Corto:</span> {p.mensaje_corta}</div>
-                  <div className="text-xs text-gray-500 truncate max-w-xs"><span className="font-semibold text-gray-400 uppercase">Largo:</span> {p.mensaje_larga}</div>
+                  <div className="text-sm text-gray-600 mb-1">
+                    <span className="font-semibold text-xs text-gray-400 uppercase">Corto:</span> {p.mensaje_corta}
+                  </div>
+                  <div className="text-xs text-gray-500 truncate max-w-xs">
+                    <span className="font-semibold text-gray-400 uppercase">Largo:</span> {p.mensaje_larga}
+                  </div>
                 </td>
+
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex justify-end gap-2">
-                    <button onClick={() => openModal(p)} className="text-indigo-600 hover:bg-indigo-50 p-2 rounded-full transition-colors">
+                    <button
+                      onClick={() => openModal(p)}
+                      className="text-indigo-600 hover:bg-indigo-50 p-2 rounded-full transition-colors"
+                    >
                       <Edit className="w-4 h-4" />
                     </button>
-                    <button onClick={() => handleDelete(p.id, p.nombre)} className="text-red-600 hover:bg-red-50 p-2 rounded-full transition-colors">
+                    <button
+                      onClick={() => handleDelete(p.id, p.nombre)}
+                      className="text-red-600 hover:bg-red-50 p-2 rounded-full transition-colors"
+                    >
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
@@ -195,27 +198,45 @@ const PersonajesPage = () => {
             ))}
           </tbody>
         </table>
-        {personajes.length === 0 && <div className="p-10 text-center text-gray-500">No hay personajes.</div>}
+
+        {personajes.length === 0 && (
+          <div className="p-10 text-center text-gray-500">No hay personajes.</div>
+        )}
       </div>
 
-      <Modal isOpen={isModalOpen} onClose={closeModal} title={currentItem ? `Editar: ${currentItem.nombre}` : 'Nuevo Personaje'}>
+      <Modal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        title={currentItem ? `Editar: ${currentItem.nombre}` : 'Nuevo Personaje'}
+      >
         <form onSubmit={handleSave} className="space-y-4">
           
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
-              <input required className="w-full px-3 py-2 border rounded-lg" value={formData.nombre} onChange={e => setFormData({...formData, nombre: e.target.value})} />
+              <input
+                required
+                className="w-full px-3 py-2 border rounded-lg"
+                value={formData.nombre}
+                onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+              />
             </div>
+
             <div>
               <label className="flex items-center gap-1 text-sm font-medium text-gray-700 mb-1">
                 <Key className="w-3 h-3" /> Asset Key
               </label>
               <input 
-                required 
-                className="w-full px-3 py-2 border rounded-lg font-mono text-sm uppercase bg-gray-50" 
-                value={formData.asset_key} 
-                readOnly={!!currentItem} // Solo lectura al editar
-                onChange={e => setFormData({...formData, asset_key: e.target.value.toUpperCase().replace(/\s/g, '_')})} 
+                required
+                readOnly={!!currentItem}
+                className="w-full px-3 py-2 border rounded-lg font-mono text-sm uppercase bg-gray-50"
+                value={formData.asset_key}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    asset_key: e.target.value.toUpperCase().replace(/\s/g, '_')
+                  })
+                }
               />
             </div>
           </div>
@@ -225,27 +246,48 @@ const PersonajesPage = () => {
               <label className="flex items-center gap-1 text-sm font-medium text-gray-700 mb-1">
                 <MessageCircle className="w-3 h-3" /> Frase Corta
               </label>
-              <input className="w-full px-3 py-2 border rounded-lg text-sm" value={formData.mensaje_corta} onChange={e => setFormData({...formData, mensaje_corta: e.target.value})} />
+              <input
+                className="w-full px-3 py-2 border rounded-lg text-sm"
+                value={formData.mensaje_corta}
+                onChange={(e) => setFormData({ ...formData, mensaje_corta: e.target.value })}
+              />
             </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Frase Larga</label>
-              <textarea className="w-full px-3 py-2 border rounded-lg text-sm" rows="1" value={formData.mensaje_larga} onChange={e => setFormData({...formData, mensaje_larga: e.target.value})} />
+              <textarea
+                rows="1"
+                className="w-full px-3 py-2 border rounded-lg text-sm"
+                value={formData.mensaje_larga}
+                onChange={(e) => setFormData({ ...formData, mensaje_larga: e.target.value })}
+              />
             </div>
           </div>
 
           <div className="pt-2">
-            {/* 🔥 USAMOS EL HELPER getImageUrl TAMBIÉN AQUÍ */}
-            <ImageUpload 
+            <ImageUpload
               label="Avatar Base"
-              currentImageUrl={getImageUrl(currentItem?.url_imagen_base)}
+              currentImageUrl={currentItem?.url_imagen_base}
               onFileSelect={setImagenFile}
             />
           </div>
 
           <div className="flex justify-end gap-3 pt-4">
-            <button type="button" onClick={closeModal} className="px-4 py-2 bg-gray-100 rounded-lg">Cancelar</button>
-            <button type="submit" disabled={isSaving} className="px-4 py-2 bg-primary text-white rounded-lg flex items-center gap-2">
-              {isSaving && <Loader2 className="w-4 h-4 animate-spin" />} {currentItem ? 'Actualizar' : 'Crear'}
+            <button
+              type="button"
+              onClick={closeModal}
+              className="px-4 py-2 bg-gray-100 rounded-lg"
+            >
+              Cancelar
+            </button>
+
+            <button
+              type="submit"
+              disabled={isSaving}
+              className="px-4 py-2 bg-primary text-white rounded-lg flex items-center gap-2"
+            >
+              {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
+              {currentItem ? 'Actualizar' : 'Crear'}
             </button>
           </div>
         </form>
